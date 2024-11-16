@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.autonomous;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.RobotHardware;
 
 @Autonomous(name="Time", group="Robot")
@@ -19,17 +18,41 @@ public class Time extends LinearOpMode {
         // initialize all the hardware, using the hardware class. See how clean and simple this is?
         robot.init();
 
-
         waitForStart();
-        robot.runtime.reset();
         // Step  through each leg of the path, ensuring that the OpMode has not been stopped along the way.
 
-        // Step 1: Strafe to the right for 1 second.
-        robot.driveRobot(0, RobotHardware.FORWARD_SPEED,0);
-        robot.runtime.reset();
-        while (opModeIsActive() && (robot.runtime.seconds() < 1.0)) {
-            telemetry.addData("Path", "Leg 1: %4.1f S Elapsed", robot.runtime.seconds());
-            telemetry.update();
-        }
+        robot.driveRobot(0.5, 0,0);
+        sleep(1000);
+
+        robot.driveRobot(0, 0,0);
+        robot.intake.setPower(robot.INTAKE_DEPOSIT);
+        sleep(100);
+
+        robot.driveRobot(-0.5, 0,0);
+        robot.intake.setPower(robot.INTAKE_OFF);
+        sleep(500);
+
+        robot.driveRobot(0, 0.5,0);
+        sleep(1500);
+
+        robot.driveRobot(0, 0,0);
+        sleep(100);
+
+        robot.driveRobot(0.2, 0,0);
+        robot.intake.setPower(robot.INTAKE_COLLECT);
+        sleep(200);
+
+        robot.driveRobot(0, 0,0);
+        sleep(100);
+
+        robot.driveRobot(-0.2,0,0);
+        robot.intake.setPower(robot.INTAKE_OFF);
+        sleep(200);
+
+        robot.driveRobot(0,-0.5,0);
+        sleep(1500);
+
+        robot.driveRobot(0.4,0, 0);
+        sleep(1000);
     }
 }

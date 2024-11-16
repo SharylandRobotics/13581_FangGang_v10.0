@@ -12,12 +12,13 @@ class rather than accessing the internal hardware directly. This is why the obje
  */
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;  
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-public class RobotHardware {
+
+public class   RobotHardware {
 
     // Declare OpMode members.
     private LinearOpMode myOpMode = null; // gains access to methods in the calling OpMode.
@@ -28,17 +29,25 @@ public class RobotHardware {
     private DcMotor leftBackDrive = null;
     private DcMotor rightFrontDrive = null;
     private DcMotor rightBackDrive = null;
-    // private DcMotor armDrive = null;
-    // private Servo leftHand = null;
-    // private Servo rightHand = null;
+    public DcMotor slideDrive = null;
+    public CRServo intake = null;
+    public CRServo leftSlide = null;
+    public CRServo rightSlide = null;
+    public Servo leftWrist = null;
+    public Servo rightWrist = null;
 
-    // Define Drive constants. (Make them public so they CAN he be used by the calling OpMode)
-    public static final double FORWARD_SPEED = 0.6;
-    public static final double TURN_SPEED = 0.5;
-    public static final double MID_SERVO = 0.5;
-    public static final double HAND_SPEED = 0.02;
-    public static final double ARM_UP_POWER = 0.45;
-    public static final double ARM_DOWN_POWER = -0.45;
+    /* Variables to store the speed the intake servo should be set at to intake, and deposit game elements. */
+    public final double INTAKE_COLLECT    = -1.0;
+    public final double INTAKE_OFF        =  0.0;
+    public final double INTAKE_DEPOSIT    =  0.5;
+
+    public final double LEFT_SLIDE_EXTEND =  0.1;
+    public final double RIGHT_SLIDE_EXTEND= 0.1;
+
+    public final double LEFT_WRIST_SCORE  =  0;
+    public final double RIGHT_WRIST_SCORE =  0;
+    public final double LEFT_WRIST_INTAKE =  0.37;
+    public final double RIGHT_WRIST_INTAKE=  0;
 
     // Define a constructor that allows the OpMode to pass a reference to itself.
     public RobotHardware (LinearOpMode opmode) {
@@ -54,9 +63,9 @@ public class RobotHardware {
         // Define and Initialize Motors. (need to use reference to actual OpMode
         leftFrontDrive = myOpMode.hardwareMap.get(DcMotor.class, "left_front_drive");
         leftBackDrive = myOpMode.hardwareMap.get(DcMotor.class, "left_back_drive");
-        rightFrontDrive = myOpMode.hardwareMap.get(DcMotor.class, "right_front_drive");
-        rightBackDrive = myOpMode.hardwareMap.get(DcMotor.class, "right_back_drive");
-        // armDrive = myOpMode.hardwareMap.get(DcMotor.class, "arm_drive");
+        rightBackDrive = myOpMode.hardwareMap.get(DcMotor.class, "right_front_drive");
+        rightFrontDrive = myOpMode.hardwareMap.get(DcMotor.class, "right_back_drive");
+        slideDrive = myOpMode.hardwareMap.get(DcMotor.class, "slide_drive");
 
         // To drive forward, most robot need the motor on one side to be reversed, because the axles point in opposite
         // directions.
@@ -68,6 +77,29 @@ public class RobotHardware {
         leftBackDrive.setDirection(DcMotor.Direction.FORWARD);
         rightFrontDrive.setDirection(DcMotor.Direction.REVERSE);
         rightBackDrive.setDirection(DcMotor.Direction.REVERSE);
+
+        /* Setting zeroPowerBehavior to BRAKE enables a "brake mode". This causes the motor to slow down
+        much faster when it is coasting. This creates a much more controllable drivetrain. As the robot
+        stops much quicker. */
+        leftFrontDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftBackDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightFrontDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightBackDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        slideDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+
+        /* Define and initialize servos.*/
+        intake = myOpMode.hardwareMap.get(CRServo.class, "intake");
+        leftSlide = myOpMode.hardwareMap.get(CRServo.class, "left_slide");
+        rightSlide = myOpMode.hardwareMap.get(CRServo.class, "right_slide");
+        leftWrist = myOpMode.hardwareMap.get(Servo.class, "left_wrist");
+        rightWrist = myOpMode.hardwareMap.get(Servo.class, "right_wrist");
+
+        /* Make sure that the intake is off, and the wrist is folded in. */
+        intake.setPower(INTAKE_OFF);
+          leftWrist.setPosition(LEFT_WRIST_SCORE);
+        //rightWrist.setPosition(RIGHT_WRIST_SCORE);
+
 
         //If there are encoders connected, switch to RUN_USING_ENCODER mode for greater accuracy
         //leftFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -117,6 +149,7 @@ public class RobotHardware {
 
         // Use the existing function to drive all wheels.
         setDrivePower(leftFrontPower, leftBackPower, rightFrontPower, rightBackPower);
+
     }
 
     /**
@@ -131,8 +164,8 @@ public class RobotHardware {
         // Output the values to the motor drives.
         leftFrontDrive.setPower(leftFrontWheel);
         leftBackDrive.setPower(leftBackWheel);
-        rightFrontDrive.setPower(rightFrontWheel);
-        rightBackDrive.setPower(rightBackWheel);
+        rightBackDrive.setPower(rightFrontWheel);
+        rightFrontDrive.setPower(rightBackWheel);
 
         /* This is test code: Uncomment the following code to test your motor directions. Each button should make
         the corresponding motor run FORWARD. 1) First get all the motors to take to correct position on the robot
@@ -152,6 +185,8 @@ public class RobotHardware {
         myOpMode.telemetry.addData("Status", "Run Time: " + runtime.toString());
         myOpMode.telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontWheel, rightFrontWheel);
         myOpMode.telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackWheel, rightBackWheel);
+        myOpMode.telemetry.addData("armTarget: ", slideDrive.getTargetPosition());
+        myOpMode.telemetry.addData("arm Encoder: ", slideDrive.getCurrentPosition());
         myOpMode.telemetry.update();
     }
 }

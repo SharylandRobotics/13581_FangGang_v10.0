@@ -39,18 +39,41 @@ public class RobotCentric extends LinearOpMode {
             yaw = gamepad1.right_stick_x;
 
             // While right bumper is held slow mode is activated
-            if (gamepad1.right_bumper) {
+            if (gamepad1.right_stick_button) {
                 axial = -gamepad1.left_stick_y * 0.25; // Note: pushing stick forward gives negative value
                 lateral = gamepad1.left_stick_x * 0.25;
                 yaw = gamepad1.right_stick_x * 0.25;
             }
 
-            // Combine drive and turn for blended motion. Use RobotHardware class
+            if (gamepad1.a) {
+                robot.intake.setPower(robot.INTAKE_COLLECT);
+            } else if (gamepad1.x) {
+                robot.intake.setPower(robot.INTAKE_OFF);
+            } else if (gamepad1.b) {
+                robot.intake.setPower(robot.INTAKE_DEPOSIT);
+            }
+
+            if (gamepad1.dpad_down) {
+                robot.leftWrist.setPosition(robot.LEFT_WRIST_INTAKE);
+            } else if (gamepad1.dpad_up) {
+                robot.leftWrist.setPosition(robot.LEFT_WRIST_SCORE);
+            }
+            if (gamepad1.right_bumper) {
+                robot.rightSlide.setPower(robot.RIGHT_SLIDE_EXTEND);
+                robot.leftSlide.setPower(robot.LEFT_SLIDE_EXTEND);
+            } else if (gamepad1.left_bumper) {
+                robot.rightSlide.setPower(-robot.RIGHT_SLIDE_EXTEND);
+                robot.leftSlide.setPower(-robot.LEFT_SLIDE_EXTEND);
+            } else {
+                robot.rightSlide.setPower(0);
+                robot.leftSlide.setPower(0);
+            }
+
+
+            // Combine drive and turn for blended motion. Use RobotHardware class.
             robot.driveRobot(axial, lateral, yaw);
 
-            //Pace this loop so hands move at a reasonable speed.
-            sleep( 50);
-
+            sleep(50);
         }
     }
 }
