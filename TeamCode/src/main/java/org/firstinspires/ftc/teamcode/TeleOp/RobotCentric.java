@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.TeleOp;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.teamcode.RobotHardware;
 
@@ -18,6 +20,7 @@ public class RobotCentric extends LinearOpMode {
         double axial = 0;
         double lateral = 0;
         double yaw = 0;
+        boolean on = false;
 //        double arm = 0;
 //        double handOffset = 0;
 
@@ -53,6 +56,16 @@ public class RobotCentric extends LinearOpMode {
                 robot.intake.setPower(robot.INTAKE_DEPOSIT);
             }
 
+            if (gamepad1.y) {
+                on = !on;
+                if (on) {
+                    robot.intake2.setPosition(1.0/10);
+                } else if (on == false) {
+                    robot.intake2.setPosition(0.0);
+                }
+
+            }
+
             if (gamepad1.dpad_down) {
                 robot.leftWrist.setPosition(robot.LEFT_WRIST_INTAKE);
             } else if (gamepad1.dpad_up) {
@@ -61,7 +74,7 @@ public class RobotCentric extends LinearOpMode {
             if (gamepad1.right_bumper) {
                 robot.rightSlide.setPower(robot.RIGHT_SLIDE_EXTEND);
                 robot.leftSlide.setPower(robot.LEFT_SLIDE_EXTEND);
-            } else if (gamepad1.left_bumper) {
+            } else if (gamepad1.left_bumper ) {
                 robot.rightSlide.setPower(-robot.RIGHT_SLIDE_EXTEND);
                 robot.leftSlide.setPower(-robot.LEFT_SLIDE_EXTEND);
             } else {
@@ -69,9 +82,21 @@ public class RobotCentric extends LinearOpMode {
                 robot.leftSlide.setPower(0);
             }
 
+            if (gamepad1.right_trigger > 0) {
+                robot.vSlidePosition= robot.VSLIDE_SCORE_SAMPLE_HIGH;
+            }
+
+            if (gamepad1.left_trigger > 0) {
+                robot.vSlidePosition= robot.VSLIDE_START_POSITION;
+            }
 
             // Combine drive and turn for blended motion. Use RobotHardware class.
             robot.driveRobot(axial, lateral, yaw);
+            robot.setvSlideDrivePosition();
+
+            if (((DcMotorEx) robot.vSlideDrive).isOverCurrent()){
+                telemetry.addLine("MOTOR EXCEEDED CURRENT LIMIT!");
+            }
 
             sleep(50);
         }
