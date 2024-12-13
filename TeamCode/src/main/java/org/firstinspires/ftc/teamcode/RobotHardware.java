@@ -45,14 +45,14 @@ public class   RobotHardware {
     // For example, use a value of 2.0 for a 12-tooth spur gear driving a 24-tooth spur gear.
     // This is gearing DOWN for less speed and more torque.
     // For gearing UP, use a gear ratio less than 1.0. Note this will affect the direction of wheel rotation.
-    static final double     COUNTS_PER_MOTOR_REV    = 537.6 ;    // AndyMark 20 Motor Encoder
-    static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // No External Gearing.
-    static final double     WHEEL_DIAMETER_INCHES   = 3.77953 ;     // For figuring circumference
-    static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
+    public final double     COUNTS_PER_MOTOR_REV    = 537.6 ;    // AndyMark 20 Motor Encoder
+    public final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // No External Gearing.
+    public final double     WHEEL_DIAMETER_INCHES   = 3.77953 ;     // For figuring circumference
+    public final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * Math.PI);
 
-    static final double     DRIVE_SPEED             = 0.6;
-    static final double     TURN_SPEED              = 0.5;
+    public final double DRIVE_SPEED = 0.75;
+    public final double TURN_SPEED = 0.75;
 
     /* Variables to store the speed the intake servo should be set at to intake, and deposit game elements. */
     public final double INTAKE_COLLECT    = -1.0;
