@@ -12,11 +12,9 @@ class rather than accessing the internal hardware directly. This is why the obje
  */
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.*;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 
@@ -27,17 +25,18 @@ public class   RobotHardware {
 
     // Define Motor and Servo objects (Make them private so they can't be accessed externally)
     public ElapsedTime runtime = new ElapsedTime();
-    private DcMotor leftFrontDrive = null;
-    private DcMotor leftBackDrive = null;
-    private DcMotor rightFrontDrive = null;
-    private DcMotor rightBackDrive = null;
+    public DcMotor leftFrontDrive = null;
+    public DcMotor leftBackDrive = null;
+    public DcMotor rightFrontDrive = null;
+    public DcMotor rightBackDrive = null;
     public DcMotor vSlideDrive = null;
     public CRServo intake = null;
-    public CRServo leftSlide = null;
-    public CRServo rightSlide = null;
+    public Servo leftSlide = null;
+    public Servo rightSlide = null;
     public Servo leftWrist = null;
     public Servo rightWrist = null;
     public Servo intake2 = null;
+    public IMU imu = null;
 
     // Calculate the COUNTS_PER_INCH for your specific drive train.
     // Go to your motor vendor website to determine your motor's COUNTS_PER_MOTOR_REV
@@ -45,26 +44,32 @@ public class   RobotHardware {
     // For example, use a value of 2.0 for a 12-tooth spur gear driving a 24-tooth spur gear.
     // This is gearing DOWN for less speed and more torque.
     // For gearing UP, use a gear ratio less than 1.0. Note this will affect the direction of wheel rotation.
+    public int newLeftFrontTarget;
+    public int newLeftBackTarget;
+    public int newRightFrontTarget;
+    public int newRightBackTarget;
+
+    private final double ROBOT_DIAG_RADIUS = Math.sqrt(Math.pow(17.5/2f, 2) + Math.pow(14.75/2f, 2));;
     public final double     COUNTS_PER_MOTOR_REV    = 537.6 ;    // AndyMark 20 Motor Encoder
     public final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // No External Gearing.
     public final double     WHEEL_DIAMETER_INCHES   = 3.77953 ;     // For figuring circumference
     public final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * Math.PI);
 
-    public final double DRIVE_SPEED = 0.75;
-    public final double TURN_SPEED = 0.75;
+    public final double DRIVE_SPEED = 0.8;
+    public final double TURN_SPEED = 0.8;
 
     /* Variables to store the speed the intake servo should be set at to intake, and deposit game elements. */
     public final double INTAKE_COLLECT    = -1.0;
     public final double INTAKE_OFF        =  0.0;
-    public final double INTAKE_DEPOSIT    =  0.5;
+    public final double INTAKE_DEPOSIT    =  1.0;
 
     public final double LEFT_SLIDE_EXTEND =  0.2;
     public final double RIGHT_SLIDE_EXTEND= -0.2;
 
     public final double LEFT_WRIST_SCORE  =  0;
     public final double RIGHT_WRIST_SCORE =  0;
-    public final double LEFT_WRIST_INTAKE =  0.53;
+    public final double LEFT_WRIST_INTAKE =  0.57;
     public final double RIGHT_WRIST_INTAKE=  0;
 
     public final double VSLIDE_TICKS_PER_DEGREE= 28*19.2/360;
@@ -88,8 +93,8 @@ public class   RobotHardware {
         // Define and Initialize Motors. (need to use reference to actual OpMode
         leftFrontDrive = myOpMode.hardwareMap.get(DcMotor.class, "left_front_drive");
         leftBackDrive = myOpMode.hardwareMap.get(DcMotor.class, "left_back_drive");
-        rightBackDrive = myOpMode.hardwareMap.get(DcMotor.class, "right_front_drive");
-        rightFrontDrive = myOpMode.hardwareMap.get(DcMotor.class, "right_back_drive");
+        rightFrontDrive = myOpMode.hardwareMap.get(DcMotor.class, "right_front_drive");
+        rightBackDrive = myOpMode.hardwareMap.get(DcMotor.class, "right_back_drive");
         vSlideDrive = myOpMode.hardwareMap.get(DcMotor.class, "slide_drive");
 
         // To drive forward, most robot need the motor on one side to be reversed, because the axles point in opposite
@@ -130,8 +135,8 @@ public class   RobotHardware {
 
         /* Define and initialize servos.*/
         intake = myOpMode.hardwareMap.get(CRServo.class, "intake");
-        leftSlide = myOpMode.hardwareMap.get(CRServo.class, "left_slide");
-        rightSlide = myOpMode.hardwareMap.get(CRServo.class, "right_slide");
+        leftSlide = myOpMode.hardwareMap.get(Servo.class, "left_slide");
+        rightSlide = myOpMode.hardwareMap.get(Servo.class, "right_slide");
         leftWrist = myOpMode.hardwareMap.get(Servo.class, "left_wrist");
         rightWrist = myOpMode.hardwareMap.get(Servo.class, "right_wrist");
         intake2 = myOpMode.hardwareMap.get(Servo.class, "intake2");
@@ -139,8 +144,10 @@ public class   RobotHardware {
         /* Make sure that the intake is off, and the wrist is folded in. */
         intake.setPower(INTAKE_OFF);
         leftWrist.setPosition(LEFT_WRIST_SCORE);
+        intake2.setPosition(0);
         //rightWrist.setPosition(RIGHT_WRIST_SCORE);
 
+        imu = myOpMode.hardwareMap.get(IMU.class, "imu");
 
         //If there are encoders connected, switch to RUN_USING_ENCODER mode for greater accuracy
         //leftFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -205,8 +212,8 @@ public class   RobotHardware {
         // Output the values to the motor drives.
         leftFrontDrive.setPower(leftFrontWheel);
         leftBackDrive.setPower(leftBackWheel);
-        rightBackDrive.setPower(rightFrontWheel);
-        rightFrontDrive.setPower(rightBackWheel);
+        rightBackDrive.setPower(rightBackWheel);
+        rightFrontDrive.setPower(rightFrontWheel);
 
         /* This is test code: Uncomment the following code to test your motor directions. Each button should make
         the corresponding motor run FORWARD. 1) First get all the motors to take to correct position on the robot
@@ -234,10 +241,7 @@ public class   RobotHardware {
     public void encoderDrive(double speed, double leftFrontInches, double leftBackInches,
                              double rightFrontInches, double rightBackInches, double timeoutS) {
 
-        int newLeftFrontTarget;
-        int newLeftBackTarget;
-        int newRightFrontTarget;
-        int newRightBackTarget;
+
 
         // Ensure that the OpMode is still active
         if (myOpMode.opModeIsActive()) {
@@ -303,6 +307,35 @@ public class   RobotHardware {
         vSlideDrive.setTargetPosition((int) (vSlidePosition));
         ((DcMotorEx) vSlideDrive).setVelocity(2100);
         vSlideDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    }
+
+    public void setHorizontalSlidePosition(double position) {
+        // limit servo range to min and max of the slide mechanism
+        position /= 4.5;
+
+        leftSlide.setPosition(position);
+        rightSlide.setPosition(1.0 - position);
+    }
+
+    public void encoderFieldCentric(double driveIN, double strafeIN, double turnDEG){
+        double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+
+        // Rotate the movement direction counter to the bot rotation
+        double strafeRotation = (strafeIN*COUNTS_PER_INCH) * Math.cos(-botHeading) - (driveIN*COUNTS_PER_INCH) * Math.sin(-botHeading);
+        double driveRotation = (strafeIN*COUNTS_PER_INCH) * Math.sin(-botHeading) + (driveIN*COUNTS_PER_INCH) * Math.cos(-botHeading);
+
+        // sector length formula (rad*radius)
+        double turnTICKS = (Math.toRadians(turnDEG) * ROBOT_DIAG_RADIUS) *COUNTS_PER_INCH;
+
+        newLeftFrontTarget = (int) (driveRotation + strafeRotation + turnTICKS);
+        newLeftBackTarget = (int) (driveRotation - strafeRotation + turnTICKS);
+        newRightFrontTarget = (int) (driveRotation - strafeRotation - turnTICKS);
+        newRightBackTarget = (int) (driveRotation +  strafeRotation - turnTICKS);
+
+        leftFrontDrive.setTargetPosition(leftFrontDrive.getCurrentPosition() + newLeftFrontTarget);
+        leftBackDrive.setTargetPosition(leftBackDrive.getCurrentPosition() + newLeftBackTarget);
+        rightFrontDrive.setTargetPosition(rightFrontDrive.getCurrentPosition() + newRightFrontTarget);
+        rightBackDrive.setTargetPosition(rightBackDrive.getCurrentPosition() + newRightBackTarget);
     }
 }
 

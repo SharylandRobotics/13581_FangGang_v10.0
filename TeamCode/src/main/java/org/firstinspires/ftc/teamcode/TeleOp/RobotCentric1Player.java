@@ -2,14 +2,12 @@ package org.firstinspires.ftc.teamcode.TeleOp;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.teamcode.RobotHardware;
 
-@TeleOp (name = "Robot Centric Drive Duo", group = "Robot")
+@TeleOp (name = "Robot Centric Drive", group = "Robot")
 
-public class RobotCentric extends LinearOpMode {
+public class RobotCentric1Player extends LinearOpMode {
 
     // Create a RobotHardware object to be used to access robot hardware. Prefix any hardware function with "robot." to
     // access this class.
@@ -57,10 +55,10 @@ public class RobotCentric extends LinearOpMode {
                 robot.intake.setPower(robot.INTAKE_DEPOSIT);
             }
             
-            if (gamepad2.a) {
+            if (gamepad1.dpad_left) {
                 robot.intake2.setPosition(1.0/9);
             }
-            if (gamepad2.b){
+            if (gamepad1.dpad_right){
                 robot.intake2.setPosition(0.0);
             }
 
@@ -73,11 +71,11 @@ public class RobotCentric extends LinearOpMode {
             horizontalArm = gamepad1.right_trigger;
             robot.setHorizontalSlidePosition(horizontalArm);
 
-            if (gamepad2.right_bumper) {
+            if (gamepad1.right_bumper) {
                 robot.vSlidePosition= robot.VSLIDE_SCORE_SAMPLE_HIGH;
             }
 
-            if (gamepad2.left_bumper) {
+            if (gamepad1.left_bumper) {
                 robot.vSlidePosition= robot.VSLIDE_START_POSITION;
             }
 
