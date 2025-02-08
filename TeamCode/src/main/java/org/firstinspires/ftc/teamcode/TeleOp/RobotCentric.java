@@ -60,6 +60,9 @@ public class RobotCentric extends LinearOpMode {
             if (gamepad2.a) {
                 robot.intake2.setPosition(1.0/9);
             }
+            if (gamepad2.dpad_right) {
+                robot.intake2.setPosition(1.0/12);
+            }
             if (gamepad2.b){
                 robot.intake2.setPosition(0.0);
             }

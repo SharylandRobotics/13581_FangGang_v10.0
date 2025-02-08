@@ -67,7 +67,7 @@ public class   RobotHardware {
     public final double LEFT_SLIDE_EXTEND =  0.2;
     public final double RIGHT_SLIDE_EXTEND= -0.2;
 
-    public final double LEFT_WRIST_SCORE  =  0;
+    public final double LEFT_WRIST_SCORE  =  0.0055;
     public final double RIGHT_WRIST_SCORE =  0;
     public final double LEFT_WRIST_INTAKE =  0.57;
     public final double RIGHT_WRIST_INTAKE=  0;
